@@ -13,6 +13,7 @@ def main():
     parser.add_argument('--ftimeout', '-ft', type=int, default=50)
     parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--time', '-t', action='store_true')
+    parser.add_argument('--showtimeouts', '-to', action='store_true')
     parser.add_argument('--showgraph', '-g', action='store_true')
 
     args = parser.parse_args()
@@ -31,13 +32,14 @@ def main():
                             verbose=args.verbose, measure_time=args.time,
                             show_graph=args.showgraph, factor_stats=factor_stats)
     print(gates)
-    print()
-    tallied = tally_stats(factor_stats)
-    print("Integers timed out factoring:")
-    print(tallied["ints_that_timedout"])
-    print()
-    print("Integers at diophantine timeout:")
-    print(factor_stats["diophantine_timedout"])
+    if args.showtimeouts:
+        print()
+        tallied = tally_stats(factor_stats)
+        print("Integers timed out factoring:")
+        print(tallied["ints_that_timedout"])
+        print()
+        print("Integers at diophantine timeout:")
+        print(factor_stats["diophantine_timedout"])
     return gates
 
 

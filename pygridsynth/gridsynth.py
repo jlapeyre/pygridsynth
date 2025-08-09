@@ -110,16 +110,21 @@ def check(theta, gates):
     print(f"{e=}")
 
 
+
 def gridsynth(
     theta,
     epsilon,
     loop_controller=None,
+    factor_stats=None,
     verbose=False,
     measure_time=False,
     show_graph=False,
 ):
     if loop_controller is None:
         loop_controller = LoopController()
+
+    if factor_stats is None:
+        factor_stats = {}
 
     epsilon_region = EpsilonRegion(theta, epsilon)
     unit_disk = UnitDisk()
@@ -155,7 +160,12 @@ def gridsynth(
             if (z * z.conj).residue == 0:
                 continue
             xi = 1 - DRootTwo.fromDOmega(z.conj * z)
-            w = diophantine_dyadic(xi, loop_controller=loop_controller)
+            w = diophantine_dyadic(xi,
+                                   loop_controller=loop_controller,
+#                                   diophantine_timeout=diophantine_timeout,
+#                                   factoring_timeout=factoring_timeout,
+                                   factor_stats=factor_stats,
+                                   )
             if w != NO_SOLUTION:
                 z = z.reduce_denomexp()
                 w = w.reduce_denomexp()
@@ -182,20 +192,25 @@ def gridsynth(
             time_of_diophantine_dyadic += time.time() - start
         k += 1
 
-
 def gridsynth_gates(
     theta,
     epsilon,
     loop_controller=None,
+    factor_stats=None,
     verbose=False,
     measure_time=False,
     show_graph=False,
 ):
     start_total = time.time() if measure_time else 0.0
+
+    if factor_stats is None:
+        factor_stats = {}
+
     u_approx = gridsynth(
         theta=theta,
         epsilon=epsilon,
         loop_controller=loop_controller,
+        factor_stats=factor_stats,
         verbose=verbose,
         measure_time=measure_time,
         show_graph=show_graph,
@@ -207,3 +222,17 @@ def gridsynth_gates(
         print(f"time of decompose_domega_unitary: {(time.time() - start) * 1000} ms")
         print(f"total time: {(time.time() - start_total) * 1000} ms")
     return gates
+
+def _tally_list(_list):
+    d = {}
+    for num in _list:
+        d[num] = d.get(num, 0) + 1
+    return d
+
+
+def tally_stats(factor_stats):
+    tallied = {
+        "ints_that_timedout": _tally_list(factor_stats["ints_that_timedout"]),
+        "diophantine_timedout": _tally_list(factor_stats["diophantine_timedout"]),
+    }
+    return tallied

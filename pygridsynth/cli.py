@@ -3,7 +3,7 @@ import argparse
 import mpmath
 
 from .diophantine import set_random_seed
-from .gridsynth import gridsynth_gates
+from .gridsynth import gridsynth_gates, tally_stats
 from .loop_controller import LoopController
 
 helps = {
@@ -50,12 +50,29 @@ def main():
         dtimeout=args.dtimeout,
         ftimeout=args.ftimeout,
     )
+
+    factor_stats = {
+        "ints_that_timedout" : [],
+        "diophantine_timedout": [],
+    }
+
     gates = gridsynth_gates(
         theta=theta,
         epsilon=epsilon,
         loop_controller=loop_controller,
+        factor_stats=factor_stats,
         verbose=args.verbose,
         measure_time=args.time,
         show_graph=args.showgraph,
     )
+
+    print(gates)
+    print()
+    tallied = tally_stats(factor_stats)
+    print("Integers timed out factoring:")
+    print(tallied["ints_that_timedout"])
+    print()
+    print("Integers at diophantine timeout:")
+    print(factor_stats["diophantine_timedout"])
+
     return gates

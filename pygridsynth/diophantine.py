@@ -253,8 +253,7 @@ def _adj_decompose_int_prime_power(p, k):
         else:
             return t**k
 
-
-def _adj_decompose_int(n, loop_controller: LoopController):
+def _adj_decompose_int(n, loop_controller: LoopController, factor_stats):
     if n < 0:
         n = -n
     facs = [(n, 1)]
@@ -267,8 +266,11 @@ def _adj_decompose_int(n, loop_controller: LoopController):
         elif t_p is None:
             fac = _find_factor(p, loop_controller)
             if fac is None:
+                factor_stats["ints_that_timedout"].append(n)
                 facs.append((p, k))
+
                 if not loop_controller.check_diophantine_continue():
+                    factor_stats["diophantine_timedout"].append(n)
                     return NO_SOLUTION
             else:
                 facs.append((p // fac, k))
@@ -278,15 +280,15 @@ def _adj_decompose_int(n, loop_controller: LoopController):
             t *= t_p
     return t
 
-
-def _adj_decompose_selfassociate(xi, loop_controller: LoopController):
+def _adj_decompose_selfassociate(xi, loop_controller: LoopController, factor_stats):
     # xi \sim xi.conj_sq2
     if xi == 0:
         return ZOmega.from_int(0)
 
     n = math.gcd(xi.a, xi.b)
     r = xi // n
-    t1 = _adj_decompose_int(n, loop_controller)
+
+    t1 = _adj_decompose_int(n, loop_controller, factor_stats)
     t2 = ZOmega(0, 0, 1, 1) if r % ZRootTwo(0, 1) == 0 else 1
     if t1 is None:
         return None
@@ -387,7 +389,7 @@ def _adj_decompose_zomega_prime_power(eta, k):
             return t**k
 
 
-def _adj_decompose_selfcoprime(xi, loop_controller: LoopController):
+def _adj_decompose_selfcoprime(xi, loop_controller: LoopController, factor_stats):
     # gcd(xi, xi.conj_sq2) = 1
     facs = [(xi, 1)]
     t = ZOmega.from_int(1)
@@ -402,8 +404,11 @@ def _adj_decompose_selfcoprime(xi, loop_controller: LoopController):
                 n = -n
             fac_n = _find_factor(n, loop_controller)
             if fac_n is None:
+                factor_stats["ints_that_timedout"].append(n)
                 facs.append((eta, k))
+
                 if not loop_controller.check_diophantine_continue():
+                    factor_stats["diophantine_timedout"].append(n)
                     return NO_SOLUTION
             else:
                 fac = ZRootTwo.gcd(xi, fac_n)
@@ -414,25 +419,24 @@ def _adj_decompose_selfcoprime(xi, loop_controller: LoopController):
             t *= t_eta
     return t
 
-
-def _adj_decompose(xi, loop_controller: LoopController):
+def _adj_decompose(xi, loop_controller: LoopController, factor_stats):
     if xi == 0:
         return ZOmega.from_int(0)
 
     d = ZRootTwo.gcd(xi, xi.conj_sq2)
     eta = xi // d
-    t1 = _adj_decompose_selfassociate(d, loop_controller)
+
+    t1 = _adj_decompose_selfassociate(d, loop_controller, factor_stats)
     if t1 == NO_SOLUTION:
         return NO_SOLUTION
     else:
-        t2 = _adj_decompose_selfcoprime(eta, loop_controller)
+        t2 = _adj_decompose_selfcoprime(eta, loop_controller, factor_stats)
         if t2 == NO_SOLUTION:
             return NO_SOLUTION
         else:
             return t1 * t2
 
-
-def _diophantine(xi, loop_controller: LoopController):
+def _diophantine(xi, loop_controller: LoopController, factor_stats):
     loop_controller.start_diophantine()
 
     if xi == 0:
@@ -440,7 +444,8 @@ def _diophantine(xi, loop_controller: LoopController):
     elif xi < 0 or xi.conj_sq2 < 0:
         return NO_SOLUTION
 
-    t = _adj_decompose(xi, loop_controller)
+    t = _adj_decompose(xi, loop_controller, factor_stats)
+
     if t == NO_SOLUTION:
         return NO_SOLUTION
     else:
@@ -453,8 +458,7 @@ def _diophantine(xi, loop_controller: LoopController):
         else:
             return v * t
 
-
-def diophantine_dyadic(xi, loop_controller=None):
+def diophantine_dyadic(xi, factor_stats, loop_controller=None):
     if loop_controller is None:
         loop_controller = LoopController()
 
@@ -462,7 +466,7 @@ def diophantine_dyadic(xi, loop_controller=None):
 
     t = _diophantine(
         xi.alpha * ZRootTwo(1, 1) if k_mod_2 else xi.alpha,
-        loop_controller=loop_controller,
+        loop_controller=loop_controller, factor_stats=factor_stats,
     )
     if t == NO_SOLUTION:
         return NO_SOLUTION

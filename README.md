@@ -75,6 +75,8 @@ python -m pygridsynth <theta> <epsilon> [options]
 - `--seed`: Sets the random seed for deterministic results (default: `0`).
 - `--verbose`, `-v`: Enables detailed output.
 - `--time`, `-t`: Measures the execution time.
+- `--showtimeouts`, `-to`: Show list of integers (with multiplicities) that timedout when factoring. Show list of
+                   integers that failed factorization when the diophantine solver timed out.
 - `--showgraph`, `-g`: Displays the decomposition result as a graph.
 
 ### Example Execution

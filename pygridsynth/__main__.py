@@ -1,8 +1,7 @@
 import argparse
 import mpmath
 
-from .gridsynth import gridsynth_gates
-
+from .gridsynth import gridsynth_gates, tally_stats
 
 def main():
     parser = argparse.ArgumentParser()
@@ -22,10 +21,21 @@ def main():
     theta = mpmath.mpmathify(args.theta)
     epsilon = mpmath.mpmathify(args.epsilon)
 
+    factor_stats = {
+        "ints_that_timedout" : [],
+        "diophantine_timedout": [],
+    }
     gates = gridsynth_gates(theta=theta, epsilon=epsilon,
                             verbose=args.verbose, measure_time=args.time,
-                            show_graph=args.showgraph)
+                            show_graph=args.showgraph, factor_stats=factor_stats)
     print(gates)
+    print()
+    tallied = tally_stats(factor_stats)
+    print("Integers timed out factoring:")
+    print(tallied["ints_that_timedout"])
+    print()
+    print("Integers at diophantine timeout:")
+    print(factor_stats["diophantine_timedout"])
     return gates
 
 

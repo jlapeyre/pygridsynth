@@ -240,7 +240,7 @@ def _adj_decompose_int_prime_power(p, k):
             return t ** k
 
 
-def _adj_decompose_int(n, diophantine_timeout, factoring_timeout, start_time):
+def _adj_decompose_int(n, diophantine_timeout, factoring_timeout, start_time, factor_stats):
     if n < 0:
         n = -n
     facs = [(n, 1)]
@@ -253,8 +253,10 @@ def _adj_decompose_int(n, diophantine_timeout, factoring_timeout, start_time):
         elif t_p is None:
             fac = _find_factor(p, factoring_timeout)
             if fac is None:
+                factor_stats["ints_that_timedout"].append(n)
                 facs.append((p, k))
                 if (time.time() - start_time) * 1000 >= diophantine_timeout:
+                    factor_stats["diophantine_timedout"].append(n)
                     return NO_SOLUTION
             else:
                 facs.append((p // fac, k))
@@ -265,14 +267,14 @@ def _adj_decompose_int(n, diophantine_timeout, factoring_timeout, start_time):
     return t
 
 
-def _adj_decompose_selfassociate(xi, diophantine_timeout, factoring_timeout, start_time):
+def _adj_decompose_selfassociate(xi, diophantine_timeout, factoring_timeout, start_time, factor_stats):
     # xi \sim xi.conj_sq2
     if xi == 0:
         return ZOmega.from_int(0)
 
     n = math.gcd(xi.a, xi.b)
     r = xi // n
-    t1 = _adj_decompose_int(n, diophantine_timeout, factoring_timeout, start_time)
+    t1 = _adj_decompose_int(n, diophantine_timeout, factoring_timeout, start_time, factor_stats)
     t2 = ZOmega(0, 0, 1, 1) if r % ZRootTwo(0, 1) == 0 else 1
     if t1 is None:
         return None
@@ -373,7 +375,7 @@ def _adj_decompose_zomega_prime_power(eta, k):
             return t ** k
 
 
-def _adj_decompose_selfcoprime(xi, diophantine_timeout, factoring_timeout, start_time):
+def _adj_decompose_selfcoprime(xi, diophantine_timeout, factoring_timeout, start_time, factor_stats):
     # gcd(xi, xi.conj_sq2) = 1
     facs = [(xi, 1)]
     t = ZOmega.from_int(1)
@@ -388,8 +390,10 @@ def _adj_decompose_selfcoprime(xi, diophantine_timeout, factoring_timeout, start
                 n = -n
             fac_n = _find_factor(n, factoring_timeout)
             if fac_n is None:
+                factor_stats["ints_that_timedout"].append(n)
                 facs.append((eta, k))
                 if (time.time() - start_time) * 1000 >= diophantine_timeout:
+                    factor_stats["diophantine_timedout"].append(n)
                     return NO_SOLUTION
             else:
                 fac = ZRootTwo.gcd(xi, fac_n)
@@ -401,30 +405,30 @@ def _adj_decompose_selfcoprime(xi, diophantine_timeout, factoring_timeout, start
     return t
 
 
-def _adj_decompose(xi, diophantine_timeout, factoring_timeout, start_time):
+def _adj_decompose(xi, diophantine_timeout, factoring_timeout, start_time, factor_stats):
     if xi == 0:
         return ZOmega.from_int(0)
 
     d = ZRootTwo.gcd(xi, xi.conj_sq2)
     eta = xi // d
-    t1 = _adj_decompose_selfassociate(d, diophantine_timeout, factoring_timeout, start_time)
+    t1 = _adj_decompose_selfassociate(d, diophantine_timeout, factoring_timeout, start_time, factor_stats)
     if t1 == NO_SOLUTION:
         return NO_SOLUTION
     else:
-        t2 = _adj_decompose_selfcoprime(eta, diophantine_timeout, factoring_timeout, start_time)
+        t2 = _adj_decompose_selfcoprime(eta, diophantine_timeout, factoring_timeout, start_time, factor_stats)
         if t2 == NO_SOLUTION:
             return NO_SOLUTION
         else:
             return t1 * t2
 
 
-def _diophantine(xi, diophantine_timeout, factoring_timeout, start_time):
+def _diophantine(xi, diophantine_timeout, factoring_timeout, start_time, factor_stats):
     if xi == 0:
         return ZOmega.from_int(0)
     elif xi < 0 or xi.conj_sq2 < 0:
         return NO_SOLUTION
 
-    t = _adj_decompose(xi, diophantine_timeout, factoring_timeout, start_time)
+    t = _adj_decompose(xi, diophantine_timeout, factoring_timeout, start_time, factor_stats)
     if t == NO_SOLUTION:
         return NO_SOLUTION
     else:
@@ -438,12 +442,12 @@ def _diophantine(xi, diophantine_timeout, factoring_timeout, start_time):
             return v * t
 
 
-def diophantine_dyadic(xi, diophantine_timeout=200, factoring_timeout=50):
+def diophantine_dyadic(xi, factor_stats, diophantine_timeout=200, factoring_timeout=50):
     k_div_2, k_mod_2 = xi.k >> 1, xi.k & 1
 
     t = _diophantine(xi.alpha * ZRootTwo(1, 1) if k_mod_2 else xi.alpha,
                      diophantine_timeout=diophantine_timeout, factoring_timeout=factoring_timeout,
-                     start_time=time.time())
+                     start_time=time.time(), factor_stats=factor_stats)
     if t == NO_SOLUTION:
         return NO_SOLUTION
     else:

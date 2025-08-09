@@ -108,7 +108,9 @@ def check(theta, gates):
 
 def gridsynth(theta, epsilon,
               diophantine_timeout=200, factoring_timeout=50,
-              verbose=False, measure_time=False, show_graph=False):
+              verbose=False, measure_time=False, show_graph=False, factor_stats=None):
+    if factor_stats is None:
+        factor_stats = {}
     epsilon_region = EpsilonRegion(theta, epsilon)
     unit_disk = UnitDisk()
     k = 0
@@ -139,7 +141,7 @@ def gridsynth(theta, epsilon,
             xi = 1 - DRootTwo.fromDOmega(z.conj * z)
             w = diophantine_dyadic(xi,
                                    diophantine_timeout=diophantine_timeout,
-                                   factoring_timeout=factoring_timeout)
+                                   factoring_timeout=factoring_timeout, factor_stats=factor_stats)
             if w != NO_SOLUTION:
                 z = z.reduce_denomexp()
                 w = w.reduce_denomexp()
@@ -166,13 +168,16 @@ def gridsynth(theta, epsilon,
 
 def gridsynth_gates(theta, epsilon,
                     diophantine_timeout=200, factoring_timeout=50,
-                    verbose=False, measure_time=False, show_graph=False):
+                    verbose=False, measure_time=False, show_graph=False, factor_stats=None):
+    if factor_stats is None:
+        factor_stats = {}
     if measure_time:
         start_total = time.time()
     u_approx = gridsynth(theta=theta, epsilon=epsilon,
                          diophantine_timeout=diophantine_timeout,
                          factoring_timeout=factoring_timeout,
-                         verbose=verbose, measure_time=measure_time, show_graph=show_graph)
+                         verbose=verbose, measure_time=measure_time, show_graph=show_graph,
+                         factor_stats=factor_stats)
     if measure_time:
         start = time.time()
     gates = decompose_domega_unitary(u_approx)
@@ -180,3 +185,19 @@ def gridsynth_gates(theta, epsilon,
         print(f"time of decompose_domega_unitary: {(time.time() - start) * 1000} ms")
         print(f"total time: {(time.time() - start_total) * 1000} ms")
     return gates
+
+
+
+def _tally_list(_list):
+    d = {}
+    for num in _list:
+        d[num] = d.get(num, 0) + 1
+    return d
+
+
+def tally_stats(factor_stats):
+    tallied = {
+        "ints_that_timedout": _tally_list(factor_stats["ints_that_timedout"]),
+        "diophantine_timedout": _tally_list(factor_stats["diophantine_timedout"]),
+    }
+    return tallied

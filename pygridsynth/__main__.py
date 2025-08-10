@@ -25,6 +25,7 @@ def main():
     factor_stats = {
         "ints_that_timedout" : [],
         "diophantine_timedout": [],
+        "no_solution_count": 0
     }
     gates = gridsynth_gates(theta=theta, epsilon=epsilon,
                             factoring_timeout=args.ftimeout,
@@ -34,6 +35,7 @@ def main():
     print(gates)
     if args.showtimeouts:
         print()
+        print(f"{factor_stats["no_solution_count"]} no-solution diophantine equations")
         tallied = tally_stats(factor_stats)
         print("Integers timed out factoring:")
         print(tallied["ints_that_timedout"])

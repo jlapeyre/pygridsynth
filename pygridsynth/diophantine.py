@@ -449,6 +449,7 @@ def diophantine_dyadic(xi, factor_stats, diophantine_timeout=200, factoring_time
                      diophantine_timeout=diophantine_timeout, factoring_timeout=factoring_timeout,
                      start_time=time.time(), factor_stats=factor_stats)
     if t == NO_SOLUTION:
+        factor_stats["no_solution_count"] += 1
         return NO_SOLUTION
     else:
         if k_mod_2:

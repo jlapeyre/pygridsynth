@@ -469,6 +469,7 @@ def diophantine_dyadic(xi, factor_stats, loop_controller=None):
         loop_controller=loop_controller, factor_stats=factor_stats,
     )
     if t == NO_SOLUTION:
+        factor_stats["no_solution_count"] += 1
         return NO_SOLUTION
     else:
         if k_mod_2:

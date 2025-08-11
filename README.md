@@ -9,6 +9,14 @@
 - **Customizable:** Allows adjustment of calculation precision (`dps`) and verbosity of output.
 - **Graph Visualization:** Provides an option to visualize decomposition results as a graph.
 
+## Development fork
+
+This is a development fork of `pygridsynth`.
+The url of the project repository mainained by the authors of `pygridsynth` is:
+https://github.com/quantum-programming/pygridsynth
+
+This branch of this fork includes a few bug fixes and features.
+
 ## Installation
 
 You can install `pygridsynth` via pip:

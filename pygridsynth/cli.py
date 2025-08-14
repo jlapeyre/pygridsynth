@@ -11,9 +11,9 @@ helps = {
     "ft": "Factoring algorithm timeout in milliseconds",
     "dl": "Diophantine algorithm max loop count",
     "fl": "Factoring algorithm max loop count",
+    "to": "Show stats on timed-out operations",
     "seed": "Random seed for deterministic results",
 }
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -28,6 +28,7 @@ def main():
     parser.add_argument("--seed", type=int, default=0, help=helps["seed"])
     parser.add_argument("--verbose", "-v", action="store_true")
     parser.add_argument("--time", "-t", action="store_true")
+    parser.add_argument('--showtimeouts', '-to', action='store_true')
     parser.add_argument("--showgraph", "-g", action="store_true")
     args = parser.parse_args()
 
@@ -54,25 +55,26 @@ def main():
     factor_stats = {
         "ints_that_timedout" : [],
         "diophantine_timedout": [],
+        "no_solution_count": 0
     }
 
     gates = gridsynth_gates(
         theta=theta,
         epsilon=epsilon,
         loop_controller=loop_controller,
-        factor_stats=factor_stats,
         verbose=args.verbose,
         measure_time=args.time,
         show_graph=args.showgraph,
+        factor_stats=factor_stats,
     )
 
-    print(gates)
-    print()
-    tallied = tally_stats(factor_stats)
-    print("Integers timed out factoring:")
-    print(tallied["ints_that_timedout"])
-    print()
-    print("Integers at diophantine timeout:")
-    print(factor_stats["diophantine_timedout"])
-
+    if args.showtimeouts:
+        print()
+        print(f"{factor_stats["no_solution_count"]} no-solution diophantine equations")
+        tallied = tally_stats(factor_stats)
+        print("Integers timed out factoring:")
+        print(tallied["ints_that_timedout"])
+        print()
+        print("Integers at diophantine timeout:")
+        print(factor_stats["diophantine_timedout"])
     return gates
